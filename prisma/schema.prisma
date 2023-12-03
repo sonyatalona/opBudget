@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["users", "connections", "records", "categories"]
+}
+
+model User {
+  id          Int          @id @default(autoincrement())
+  email       String       @unique
+  password    String
+  name        String?
+  lastSeen    DateTime?
+  records     Record[]
+  connections Connection[]
+  categories  Category[]
+
+  @@schema("users")
+}
+
+model Connection {
+  id         Int       @id @default(autoincrement())
+  userId     Int
+  user       User      @relation(fields: [userId], references: [id])
+  provider   String
+  providerId String
+  token      String
+  secret     String?
+  expiresAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@schema("connections")
+}
+
+model Record {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+  provider   String
+  providerId String
+  data       Json
+  createdAt  DateTime @default(now())
+
+  @@schema("records")
+}
+
+model Category {
+  id                 Int        @id @default(autoincrement())
+  userId             Int
+  user               User       @relation(fields: [userId], references: [id])
+  name               String
+  description        String?
+  parentCategoryId   Int?
+  parentCategory     Category?  @relation("ParentCategory", fields: [parentCategoryId], references: [id])
+  childrenCategories Category[] @relation("ParentCategory")
+  timesUsed          Int        @default(0)
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  @@schema("categories")
+}
