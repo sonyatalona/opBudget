@@ -27,6 +27,11 @@ export async function POST(req: NextRequest) {
   console.log(req.ip);
   console.log(req.geo);
   console.log(req.geo?.country);
+
+  req.headers.forEach((value, key) => {
+    console.log(key, value);
+  });
+
   try {
     console.log(getParamByParam('countryName', req.geo?.country ?? '', 'currency') as CurrencyCode);
   } catch (error) {
