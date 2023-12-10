@@ -2,7 +2,7 @@ export type Category = {
   id: number;
   name: string;
   timesUsed: number;
-  createdAt: string;
+  createdAt: Date;
   description?: string;
   isParent: boolean;
   parentId?: number;

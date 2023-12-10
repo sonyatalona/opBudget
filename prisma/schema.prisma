@@ -2,67 +2,93 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["multiSchema"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["users", "connections", "records", "categories"]
+}
+
+enum Status {
+  ACTIVE
+  BLOCKED
 }
 
 model User {
-  id          Int          @id @default(autoincrement())
-  email       String       @unique
-  password    String
-  name        String?
-  lastSeen    DateTime?
+  id       Int     @id @default(autoincrement())
+  email    String  @unique @db.VarChar(99)
+  password String
+  name     String?
+  status   Status  @default(ACTIVE)
+  imageUrl String?
+  currency String  @default("USD") @db.VarChar(3)
+
   records     Record[]
   connections Connection[]
   categories  Category[]
 
-  @@schema("users")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
+// this can be both a connected account or manual account
 model Connection {
-  id         Int       @id @default(autoincrement())
-  userId     Int
-  user       User      @relation(fields: [userId], references: [id])
-  provider   String
-  providerId String
-  token      String
-  secret     String?
-  expiresAt  DateTime?
-  createdAt  DateTime  @default(now())
+  id        Int       @id @default(autoincrement())
+  name      String    @db.VarChar(99)
+  meta      Json?     @db.Json
+  imageUrl  String?
+  currency  String    @default("USD") @db.VarChar(3)
+  token     String?
+  secret    String?
+  isManual  Boolean   @default(false)
+  expiresAt DateTime? @db.Timestamp(6)
 
-  @@schema("connections")
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  FromRecords Record[] @relation("FromConnection")
+  ToRecords   Record[] @relation("ToConnection")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+}
+
+enum RecordType {
+  INCOME
+  TRANSFER
+  EXPENSE
+  INVESTMENT
 }
 
 model Record {
-  id         Int      @id @default(autoincrement())
-  userId     Int
-  user       User     @relation(fields: [userId], references: [id])
-  provider   String
-  providerId String
-  data       Json
-  createdAt  DateTime @default(now())
+  id       Int        @id @default(autoincrement())
+  name     String?    @db.VarChar(50)
+  notes    String?    @db.Text
+  amount   Float      @db.DoublePrecision
+  currency String     @db.VarChar(3)
+  type     RecordType
+  meta     Json?      @db.Json
 
-  @@schema("records")
+  userId Int
+  user   User        @relation(fields: [userId], references: [id])
+  from   Int
+  From   Connection  @relation("FromConnection", fields: [from], references: [id])
+  to     Int?
+  To     Connection? @relation("ToConnection", fields: [to], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Category {
-  id                 Int        @id @default(autoincrement())
-  userId             Int
-  user               User       @relation(fields: [userId], references: [id])
-  name               String
-  description        String?
-  parentCategoryId   Int?
-  parentCategory     Category?  @relation("ParentCategory", fields: [parentCategoryId], references: [id])
-  childrenCategories Category[] @relation("ParentCategory")
-  timesUsed          Int        @default(0)
-  createdAt          DateTime   @default(now())
-  updatedAt          DateTime   @updatedAt
+  id        Int     @id @default(autoincrement())
+  name      String  @db.VarChar(50)
+  notes     String?
+  timesUsed Int     @default(0)
 
-  @@schema("categories")
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

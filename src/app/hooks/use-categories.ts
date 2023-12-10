@@ -9,10 +9,17 @@ type CategoryArgs = {
 };
 
 async function sendRequest(url: string, { arg }: { arg: CategoryArgs }) {
-  return fetch(url, {
+  const res = await fetch(url, {
     method: 'POST',
     body: JSON.stringify(arg),
-  }).then((res) => res.json());
+  });
+  if (!res.ok) {
+    const body = await res.json();
+
+    throw new Error(body.error);
+  }
+
+  return res.json();
 }
 
 export const useCategories = () => {
@@ -28,13 +35,12 @@ export const useCategories = () => {
   });
 
   const { trigger: addCategory, error: addCategoryError } = useSWRMutation('/category', sendRequest, {
+    throwOnError: false,
     onSuccess: (res) => {
-      console.log(res);
       data?.push(res);
     },
   });
 
-  console.log(data);
   return {
     categories: data,
     addCategory,

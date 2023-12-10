@@ -1,14 +1,21 @@
 import { SessionOptions } from 'iron-session';
 
 export interface SessionData {
-  username: string;
+  email: string;
+  name: string;
   isLoggedIn: boolean;
   userId?: number;
+  status: 'ACTIVE' | 'BLOCKED';
+  imageUrl?: string;
+  curency: string;
 }
 
 export const defaultSession: SessionData = {
-  username: '',
+  curency: 'USD',
+  email: '',
+  name: 'Anonymous',
   isLoggedIn: false,
+  status: 'ACTIVE',
 };
 
 export const sessionOptions = (ttl?: number): SessionOptions => {

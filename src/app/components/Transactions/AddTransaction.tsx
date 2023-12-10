@@ -1,20 +1,11 @@
 'use client';
-import { useCategories } from '@/app/hooks/use-categories';
 import { useDevice } from '@/app/hooks/use-media-query';
-import {
-  Autocomplete,
-  Button,
-  Drawer,
-  FormControl,
-  FormHelperText,
-  FormLabel,
-  IconButton,
-  Sheet,
-  Stack,
-  Typography,
-} from '@mui/joy';
+import { Button, Drawer, FormControl, IconButton, Sheet, Snackbar, Stack, Typography } from '@mui/joy';
 import { createSvgIcon } from '@mui/material';
 import React from 'react';
+import { AutocompleteAndAdd } from './AutocompleteAndAdd';
+import type { Category } from '@/types/categories';
+import { PaymentProcessor } from './PaymentProcessor';
 
 const PlusIcon = createSvgIcon(
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -26,10 +17,21 @@ const PlusIcon = createSvgIcon(
 export const AddTransaction: React.FC = () => {
   const [drawer, setDrawer] = React.useState<boolean>(false);
   const device = useDevice();
-  const { categories, addCategory } = useCategories();
-  console.log(categories);
+  const [selectedCategory, setSelectedCategory] = React.useState<Category | null>(null);
 
   const toggleDrawer = (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
+    const close = () => {
+      setDrawer(open);
+      if (!open) {
+        setTimeout(() => {
+          setSelectedCategory(null);
+        }, 400);
+      }
+    };
+    if (event.type === 'keydown' && (event as React.KeyboardEvent).key === 'Escape') {
+      close();
+      return;
+    }
     if (
       event.type === 'keydown' &&
       ((event as React.KeyboardEvent).key === 'Tab' || (event as React.KeyboardEvent).key === 'Shift')
@@ -37,7 +39,7 @@ export const AddTransaction: React.FC = () => {
       return;
     }
 
-    setDrawer(open);
+    close();
   };
 
   return (
@@ -68,37 +70,26 @@ export const AddTransaction: React.FC = () => {
         }}
       >
         <Sheet className={`w-auto h-full dark:bg-gray-700 bg-gray-400 rounded-t-lg md:rounded-lg md:m-6`}>
-          <Stack direction={'column'} className="p-4">
-            <Typography className="text-white" level="h2" noWrap={false} variant="plain">
+          <Stack direction={'column'} className="p-4" gap={2}>
+            <Typography className="dark:text-white text-black mb-4" level="h2" noWrap={false} variant="plain">
               Add Transaction
             </Typography>
-            <form
-              action={async (_formData: FormData) => {
-                await addCategory({ categoryName: 'test' });
-              }}
-            >
-              <FormControl size="sm">
-                <FormLabel>Category</FormLabel>
-                <Autocomplete
-                  type="text"
-                  multiple={false}
-                  placeholder="Favorite movies"
-                  autoComplete={false}
-                  options={[{ title: 'The Godfather' }, { title: 'The Godfather: Part II' }] as { title: string }[]}
-                  getOptionLabel={(option) => (Array.isArray(option) ? option[0].title : option.title)}
-                  defaultValue={[{ title: 'The Godfather' }]}
-                />
-                <FormHelperText>This is a small description.</FormHelperText>
-              </FormControl>
-              <FormControl size="sm">
-                <Button type="submit" className="bg-white text-black">
-                  Submit
-                </Button>
-              </FormControl>
-            </form>
+
+            <AutocompleteAndAdd setSelected={setSelectedCategory} selected={selectedCategory} />
+
+            <PaymentProcessor />
+
+            <FormControl size="sm">
+              <Button type="submit" className="bg-white text-black">
+                Submit
+              </Button>
+            </FormControl>
           </Stack>
         </Sheet>
       </Drawer>
+      <Snackbar open={false} autoHideDuration={6000} onClose={() => {}}>
+        <Typography>Transaction Added</Typography>
+      </Snackbar>
     </>
   );
 };

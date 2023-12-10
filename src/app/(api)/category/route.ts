@@ -5,7 +5,6 @@ import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
 
 export async function GET() {
-  console.log('GET');
   const session = await getIronSession<SessionData>(cookies(), sessionOptions());
 
   if (session.isLoggedIn !== true) {
@@ -25,7 +24,6 @@ export async function GET() {
     await session.save();
   }
 
-  console.log(session);
   const categories = await prisma.category.findMany({
     where: {
       userId,
@@ -33,9 +31,8 @@ export async function GET() {
     orderBy: {
       timesUsed: 'desc',
     },
+    take: 30,
   });
-
-  console.log(categories);
 
   return Response.json(categories);
 }
@@ -82,7 +79,7 @@ export async function POST(req: NextRequest) {
   });
 
   if (existingCategoryForTheUser) {
-    return Response.json({ error: 'Category already exists, Please Choose Different Name' }, { status: 400 });
+    return Response.json({ error: 'Category already exists, Please choose a different name' }, { status: 400 });
   }
 
   const category = await prisma.category.create({

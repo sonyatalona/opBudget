@@ -4,6 +4,8 @@ import { getIronSession } from 'iron-session';
 import { SessionData, defaultSession, sessionOptions, sleep } from '@/lib';
 import prisma from '@/utils/prisma';
 import bcrypt from 'bcrypt';
+import { CurrencyCode } from '@/types/currencies';
+import { getParamByParam } from 'iso-country-currency';
 
 // authorize
 export async function POST(req: NextRequest) {
@@ -14,22 +16,43 @@ export async function POST(req: NextRequest) {
   const { email, password } = body as { email: string; password: string };
 
   session.isLoggedIn = true;
-  session.username = email;
+  session.email = email;
 
   const userExists = await prisma.user.findUnique({
     where: {
       email,
     },
   });
+  console.log(req);
+  console.log(req.ip);
+  console.log(req.geo);
+  console.log(req.geo?.country);
+  try {
+    console.log(getParamByParam('countryName', req.geo?.country ?? '', 'currency') as CurrencyCode);
+  } catch (error) {
+    console.error(error);
+  }
 
   if (!userExists) {
+    let currency: CurrencyCode;
+
+    try {
+      currency = getParamByParam('countryName', req.geo?.country ?? '', 'currency') as CurrencyCode;
+    } catch (error) {
+      console.error(error);
+      currency = CurrencyCode.USD;
+    }
+
     const newUser = await prisma.user.create({
       data: {
         email,
         password: await bcrypt.hash(password, 10),
+        status: 'ACTIVE',
+        currency,
       },
     });
     session.userId = newUser.id;
+    session.status = newUser.status;
     await session.save();
     return Response.json(session);
   }
@@ -37,12 +60,16 @@ export async function POST(req: NextRequest) {
   const passwordMatch = await bcrypt.compare(password, userExists?.password ?? '');
   if (!passwordMatch) {
     session.destroy();
-    return new Response(JSON.stringify({ message: 'Invalid Password' }), {
+    return new Response(JSON.stringify({ error: 'Invalid Password' }), {
       status: 401,
     });
   }
 
   session.userId = userExists.id;
+  session.status = userExists.status;
+  session.name = userExists.name;
+  session.imageUrl = userExists.imageUrl;
+  session.curency = userExists.curency;
   await session.save();
   return Response.json(session);
 }
