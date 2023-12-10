@@ -16,7 +16,7 @@ export async function GET() {
   if (!userId) {
     const user = await prisma.user.findUnique({
       where: {
-        email: session.username,
+        email: session.email,
       },
     });
     userId = user?.id;
