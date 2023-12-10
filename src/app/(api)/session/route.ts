@@ -5,7 +5,7 @@ import { SessionData, defaultSession, sessionOptions, sleep } from '@/lib';
 import prisma from '@/utils/prisma';
 import bcrypt from 'bcrypt';
 import { CurrencyCode } from '@/types/currencies';
-import { getParamByParam } from 'iso-country-currency';
+import { getParamByISO } from 'iso-country-currency';
 
 // authorize
 export async function POST(req: NextRequest) {
@@ -23,29 +23,29 @@ export async function POST(req: NextRequest) {
       email,
     },
   });
-  console.log(req);
-  console.log(req.ip);
-  console.log(req.geo);
-  console.log(req.geo?.country);
 
   req.headers.forEach((value, key) => {
     console.log(key, value);
   });
 
-  try {
-    console.log(getParamByParam('countryName', req.geo?.country ?? '', 'currency') as CurrencyCode);
-  } catch (error) {
-    console.error(error);
+  if (req.nextUrl.protocol === 'https:') {
+    try {
+      const countryCode = req.headers.get('x-vercel-ip-country');
+      console.log(getParamByISO(countryCode ?? 'US', 'currency') as CurrencyCode);
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   if (!userExists) {
-    let currency: CurrencyCode;
-
-    try {
-      currency = getParamByParam('countryName', req.geo?.country ?? '', 'currency') as CurrencyCode;
-    } catch (error) {
-      console.error(error);
-      currency = CurrencyCode.USD;
+    let currency: CurrencyCode = CurrencyCode.USD;
+    if (req.nextUrl.protocol === 'https:') {
+      try {
+        const countryCode = req.headers.get('x-vercel-ip-country');
+        currency = getParamByISO(countryCode ?? 'US', 'currency') as CurrencyCode;
+      } catch (error) {
+        console.error(error);
+      }
     }
 
     const newUser = await prisma.user.create({
