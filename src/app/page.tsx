@@ -1,12 +1,9 @@
-'use client';
-
-import './globals.css';
 import React from 'react';
 
-export default function Home() {
+export default function Page() {
   return (
     <div>
-      <h1>Main</h1>
+      <h1>Page</h1>
     </div>
   );
 }
