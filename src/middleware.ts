@@ -9,7 +9,6 @@ export async function middleware(request: NextRequest) {
   const user = session.isLoggedIn ? true : false;
   console.log('user', user);
   if (!user) {
-    console.log(request.nextUrl);
     return NextResponse.redirect(new URL('/', request.nextUrl).href);
   }
 

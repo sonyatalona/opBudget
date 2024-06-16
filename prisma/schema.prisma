@@ -16,13 +16,14 @@ enum Status {
 }
 
 model User {
-  id       Int     @id @default(autoincrement())
+  id       String  @id @default(uuid())
   email    String  @unique @db.VarChar(99)
   password String
   name     String?
   status   Status  @default(ACTIVE)
   imageUrl String?
   currency String  @default("USD") @db.VarChar(3)
+  budget   Float?  @db.DoublePrecision
 
   records     Record[]
   connections Connection[]
@@ -44,7 +45,7 @@ model Connection {
   isManual  Boolean   @default(false)
   expiresAt DateTime? @db.Timestamp(6)
 
-  userId      Int
+  userId      String
   user        User     @relation(fields: [userId], references: [id])
   FromRecords Record[] @relation("FromConnection")
   ToRecords   Record[] @relation("ToConnection")
@@ -69,12 +70,14 @@ model Record {
   type     RecordType
   meta     Json?      @db.Json
 
-  userId Int
-  user   User        @relation(fields: [userId], references: [id])
-  from   Int
-  From   Connection  @relation("FromConnection", fields: [from], references: [id])
-  to     Int?
-  To     Connection? @relation("ToConnection", fields: [to], references: [id])
+  userId   String
+  user     User        @relation(fields: [userId], references: [id])
+  from     Int
+  From     Connection  @relation("FromConnection", fields: [from], references: [id])
+  category Int
+  Category Category    @relation(fields: [category], references: [id])
+  to       Int?
+  To       Connection? @relation("ToConnection", fields: [to], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -86,9 +89,10 @@ model Category {
   notes     String?
   timesUsed Int     @default(0)
 
-  userId Int
-  user   User @relation(fields: [userId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  Record    Record[]
 }

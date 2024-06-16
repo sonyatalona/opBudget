@@ -28,15 +28,6 @@ export async function POST(req: NextRequest) {
     console.log(key, value);
   });
 
-  if (req.nextUrl.protocol === 'https:') {
-    try {
-      const countryCode = req.headers.get('x-vercel-ip-country');
-      console.log(getParamByISO(countryCode ?? 'US', 'currency') as CurrencyCode);
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
   if (!userExists) {
     let currency: CurrencyCode = CurrencyCode.USD;
     if (req.nextUrl.protocol === 'https:') {
@@ -45,6 +36,7 @@ export async function POST(req: NextRequest) {
         currency = getParamByISO(countryCode ?? 'US', 'currency') as CurrencyCode;
       } catch (error) {
         console.error(error);
+        currency = CurrencyCode.USD;
       }
     }
 
@@ -58,6 +50,8 @@ export async function POST(req: NextRequest) {
     });
     session.userId = newUser.id;
     session.status = newUser.status;
+    session.currency = newUser.currency;
+    session.imageUrl = newUser.imageUrl;
     await session.save();
     return Response.json(session);
   }
@@ -74,7 +68,7 @@ export async function POST(req: NextRequest) {
   session.status = userExists.status;
   session.name = userExists.name;
   session.imageUrl = userExists.imageUrl;
-  session.curency = userExists.curency;
+  session.currency = userExists.curency;
   await session.save();
   return Response.json(session);
 }

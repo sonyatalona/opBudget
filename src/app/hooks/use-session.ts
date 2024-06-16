@@ -41,14 +41,15 @@ function doLogout(url: string) {
 
 export default function useSession() {
   const { data: session, isLoading } = useSWR(sessionApiRoute, fetchJson<SessionData>, {
+    revalidateOnFocus: true,
     fallbackData: defaultSession,
   });
 
   const { trigger: login, error } = useSWRMutation(sessionApiRoute, doLogin, {
     revalidate: true,
     throwOnError: false,
-    onSuccess: () => {
-      window.location.href = '/dashboard';
+    onSuccess: (session) => {
+      window.location.href = `/dashboard/${session.userId}`;
     },
   });
 

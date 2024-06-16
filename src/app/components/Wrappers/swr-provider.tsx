@@ -1,10 +1,10 @@
 'use client';
 import { SWRConfig } from 'swr';
 import React, { ReactNode } from 'react';
-import { useAlert } from './alert-wrapper';
+import { useAlertStore } from './alert-wrapper';
 
 export const SWRProvider = ({ children }: { children: ReactNode }) => {
-  const { showAlert } = useAlert();
+  const { showAlert } = useAlertStore();
   return (
     <SWRConfig
       value={{

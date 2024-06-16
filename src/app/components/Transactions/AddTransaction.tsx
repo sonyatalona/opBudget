@@ -1,10 +1,8 @@
 'use client';
-import { useDevice } from '@/app/hooks/use-media-query';
 import { Button, Drawer, FormControl, IconButton, Sheet, Snackbar, Stack, Typography } from '@mui/joy';
 import { createSvgIcon } from '@mui/material';
-import React from 'react';
-import { AutocompleteAndAdd } from './AutocompleteAndAdd';
-import type { Category } from '@/types/categories';
+import React, { useEffect } from 'react';
+import { AutocompleteCategory } from './AutocompleteCategory';
 import { PaymentProcessor } from './PaymentProcessor';
 
 const PlusIcon = createSvgIcon(
@@ -14,19 +12,17 @@ const PlusIcon = createSvgIcon(
   'Plus'
 );
 
+type Tab = 'income' | 'expense' | 'transfer';
+type Device = 'mobile' | 'desktop' | 'tablet';
+
 export const AddTransaction: React.FC = () => {
   const [drawer, setDrawer] = React.useState<boolean>(false);
-  const device = useDevice();
-  const [selectedCategory, setSelectedCategory] = React.useState<Category | null>(null);
+  const [device, setDevice] = React.useState<Device>('desktop');
+  const [tab, setTab] = React.useState<Tab>('expense');
 
   const toggleDrawer = (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
     const close = () => {
       setDrawer(open);
-      if (!open) {
-        setTimeout(() => {
-          setSelectedCategory(null);
-        }, 400);
-      }
     };
     if (event.type === 'keydown' && (event as React.KeyboardEvent).key === 'Escape') {
       close();
@@ -42,6 +38,30 @@ export const AddTransaction: React.FC = () => {
     close();
   };
 
+  useEffect(() => {
+    setDevice(window.innerWidth < 768 ? 'mobile' : window.innerWidth < 1250 ? 'tablet' : 'desktop');
+  }, []);
+
+  useEffect(() => {
+    // adding event listener to detect screen size
+    // very ugly solution
+    // TODO: find a better way to do this
+    const resizeHandler = () => {
+      if (window.innerWidth < 768) {
+        setDevice('mobile');
+      } else if (window.innerWidth < 1250) {
+        setDevice('tablet');
+      } else {
+        setDevice('desktop');
+      }
+    };
+
+    window.addEventListener('resize', resizeHandler);
+
+    return () => {
+      window.removeEventListener('resize', resizeHandler);
+    };
+  }, []);
   return (
     <>
       <IconButton
@@ -55,7 +75,7 @@ export const AddTransaction: React.FC = () => {
         <PlusIcon />
       </IconButton>
       <Drawer
-        size={'md'}
+        size={device === 'desktop' ? 'md' : device === 'tablet' ? 'lg' : 'lg'}
         anchor={device === 'mobile' ? 'bottom' : 'right'}
         open={drawer}
         onClose={toggleDrawer(false)}
@@ -70,21 +90,67 @@ export const AddTransaction: React.FC = () => {
         }}
       >
         <Sheet className={`w-auto h-full dark:bg-gray-700 bg-gray-400 rounded-t-lg md:rounded-lg md:m-6`}>
-          <Stack direction={'column'} className="p-4" gap={2}>
-            <Typography className="dark:text-white text-black mb-4" level="h2" noWrap={false} variant="plain">
-              Add Transaction
-            </Typography>
+          {/* dirty solution to clean internal state */}
+          {drawer && (
+            <form
+              action={async (formData: FormData) => {
+                console.log(formData);
+                console.log(formData.entries());
+                const body: { [key: string]: FormDataEntryValue } = {};
+                formData.forEach((value, key) => {
+                  body[key] = value;
+                });
+                console.log(body);
+                const response = await fetch('/transaction', {
+                  method: 'POST',
+                  body: JSON.stringify(body),
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                });
+                const json = await response.json();
+                console.log(json);
+              }}
+            >
+              <Stack direction={'column'} className="p-4" gap={2}>
+                <Typography className="dark:text-white text-black mb-4" level="h2" noWrap={false} variant="plain">
+                  Add Transaction
+                </Typography>
 
-            <AutocompleteAndAdd setSelected={setSelectedCategory} selected={selectedCategory} />
+                <div className="flex justify-around rounded-full">
+                  <TabButton tab="expense" setTab={setTab} color="red" active={tab === 'expense'} />
+                  <TabButton tab="income" setTab={setTab} color="yellow" active={tab === 'income'} />
+                  <TabButton tab="transfer" setTab={setTab} color="sky" active={tab === 'transfer'} />
+                </div>
 
-            <PaymentProcessor />
+                {tab === 'expense' && (
+                  <>
+                    <AutocompleteCategory />
 
-            <FormControl size="sm">
-              <Button type="submit" className="bg-white text-black">
-                Submit
-              </Button>
-            </FormControl>
-          </Stack>
+                    <PaymentProcessor />
+                  </>
+                )}
+                {tab === 'income' && (
+                  <>
+                    <AutocompleteCategory />
+
+                    <PaymentProcessor />
+                  </>
+                )}
+                {tab === 'transfer' && (
+                  <>
+                    <PaymentProcessor />
+                  </>
+                )}
+
+                <FormControl size="sm">
+                  <Button type="submit" className="bg-white text-black">
+                    Submit
+                  </Button>
+                </FormControl>
+              </Stack>
+            </form>
+          )}
         </Sheet>
       </Drawer>
       <Snackbar open={false} autoHideDuration={6000} onClose={() => {}}>
@@ -92,4 +158,38 @@ export const AddTransaction: React.FC = () => {
       </Snackbar>
     </>
   );
+};
+
+const TabButton = ({
+  tab,
+  setTab,
+  color,
+  active,
+}: {
+  tab: Tab;
+  setTab: (tab: Tab) => void;
+  color: string;
+  active: boolean;
+}) => {
+  if (active) {
+    return (
+      <div
+        className={`border-2 bg-white p-1 px-4 rounded-full capitalize cursor-pointer`}
+        style={{ borderColor: color }}
+      >
+        {tab}
+      </div>
+    );
+  } else {
+    return (
+      <div
+        className={`bg-white p-1 px-4 rounded-full capitalize cursor-pointer border-2`}
+        onClick={() => {
+          setTab(tab);
+        }}
+      >
+        {tab}
+      </div>
+    );
+  }
 };

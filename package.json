@@ -17,6 +17,7 @@
     "@mui/icons-material": "^5.14.19",
     "@mui/joy": "^5.0.0-beta.16",
     "@mui/material": "^5.14.19",
+    "@mui/x-charts": "^7.0.0-alpha.4",
     "@prisma/client": "^5.6.0",
     "bcrypt": "^5.1.1",
     "iron-session": "^8.0.1",
@@ -25,7 +26,8 @@
     "prisma": "^5.6.0",
     "react": "^18",
     "react-dom": "^18",
-    "swr": "^2.2.4"
+    "swr": "^2.2.4",
+    "zustand": "^4.4.7"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
@@ -45,6 +47,6 @@
     "postcss": "^8",
     "prettier": "^3.1.0",
     "tailwindcss": "^3.3.0",
-    "typescript": "^5"
+    "typescript": "^5.3.3"
   }
 }

@@ -4,6 +4,7 @@ import './globals.css';
 import { NavBarWrapper } from './components/Navbar/NavBarWrapper';
 import { SWRProvider } from './components/Wrappers/swr-provider';
 import { AlertWrapper } from './components/Wrappers/alert-wrapper';
+import { createStore } from 'zustand';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -11,6 +12,10 @@ export const metadata: Metadata = {
   title: 'OP Budget App',
   description: 'Do your budgeting right with Open Source Budget App',
 };
+
+const store = createStore<{
+  isAuth: boolean;
+}>();
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

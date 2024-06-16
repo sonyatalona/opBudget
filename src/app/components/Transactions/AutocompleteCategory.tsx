@@ -1,27 +1,14 @@
 import { useCategories } from '@/app/hooks/use-categories';
 import { Category } from '@/types/categories';
 import { Autocomplete, AutocompleteOption, FormControl, FormLabel, createFilterOptions } from '@mui/joy';
-import React, { useEffect } from 'react';
-import { useAlert } from '../Wrappers/alert-wrapper';
+import React from 'react';
+import { useAlertStore } from '../Wrappers/alert-wrapper';
 
-interface Props {
-  selected: Category | null;
-  setSelected(value: Category): void;
-}
-
-export const AutocompleteAndAdd: React.FC<Props> = ({ selected, setSelected }) => {
+export const AutocompleteCategory: React.FC = () => {
+  const [selected, setSelected] = React.useState<Category | null>(null);
   const { categories, isLoading, isError } = useCategories();
-  const { showAlert } = useAlert();
+  const { showAlert } = useAlertStore();
 
-  useEffect(() => {
-    if (isError) {
-      showAlert({
-        message: 'There was an error loading categories.',
-        severity: 'danger',
-        duration: 5000,
-      });
-    }
-  }, [isError]);
   return (
     <>
       <FormControl size="sm" id="category">
@@ -29,6 +16,7 @@ export const AutocompleteAndAdd: React.FC<Props> = ({ selected, setSelected }) =
         <Autocomplete
           multiple={false}
           placeholder="Select a category"
+          name="category"
           autoComplete={true}
           options={categories ?? []}
           getOptionLabel={(option) => option.name}

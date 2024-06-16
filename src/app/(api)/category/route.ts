@@ -1,6 +1,7 @@
 import { SessionData, sessionOptions } from '@/lib';
 import prisma from '@/utils/prisma';
 import { getIronSession } from 'iron-session';
+import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
 
@@ -90,6 +91,8 @@ export async function POST(req: NextRequest) {
       parentCategoryId: parentId,
     },
   });
+
+  revalidatePath(`/dashboard/${userId}`, 'page');
 
   return Response.json(category);
 }

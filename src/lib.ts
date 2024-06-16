@@ -4,18 +4,20 @@ export interface SessionData {
   email: string;
   name: string;
   isLoggedIn: boolean;
-  userId?: number;
+  userId?: string;
   status: 'ACTIVE' | 'BLOCKED';
   imageUrl?: string;
-  curency: string;
+  currency: string;
+  budget?: number;
 }
 
 export const defaultSession: SessionData = {
-  curency: 'USD',
+  currency: 'USD',
   email: '',
   name: 'Anonymous',
   isLoggedIn: false,
   status: 'ACTIVE',
+  budget: 0,
 };
 
 export const sessionOptions = (ttl?: number): SessionOptions => {
